@@ -8,8 +8,10 @@ function! repel#set_repl(repl)
 endfunction
 
 command! ReplOpen call repel#open_repl()
-command! ReplShow call s:generic_repl_function(tolower('show'))
-command! ReplHide call s:generic_repl_function(tolower('hide'))
+command! ReplShow call s:generic_repl_function('show')
+command! ReplHide call s:generic_repl_function('hide')
+command! -nargs=+ ReplDo call s:generic_repl_function('do', [<q-args>, ""])
+command! -range ReplSend call s:generic_repl_function('do', s:getLines(<line1>, <line2>))
 
 function! repel#open_repl()
   if !exists('b:repl_cmd')
@@ -28,7 +30,7 @@ function! repel#open_repl()
   call repl.open()
 endfunction
 
-function! s:generic_repl_function(func)
+function! s:generic_repl_function(func, ...)
   if !exists('b:repl_cmd')
     echom "No repl for current file :("
     return ''
@@ -36,7 +38,7 @@ function! s:generic_repl_function(func)
 
   if s:repl_exists()
     let repl = s:lookup_repl()
-    call repl[a:func]()
+    call repl[a:func](a:000)
   else
     echom "No repl for this buffer/project :("
   endif
@@ -60,6 +62,7 @@ function! s:new_repl(dir)
         \  'command': b:repl_cmd,
         \  'dir': a:dir,
         \  'open': function('<sid>repl_open'),
+        \  'do': function('<sid>repl_do'),
         \  'switch': function('<sid>repl_switch'),
         \  'hide': function('<sid>repl_hide'),
         \  'show': function('<sid>repl_show'),
@@ -73,40 +76,62 @@ endfunction
 
 let s:open_cmd = "botright 15 split"
 
-function! s:repl_open() dict
+function! s:repl_open(...) dict
   if has_key(self, 'buffer') && bufexists(self.buffer)
     call self.switch()
   else
     exec s:open_cmd
     enew
-    call termopen(self.command . ';#repel')
+    let job_id =  termopen(self.command . ';#repel')
     startinsert
     let self.buffer = bufnr('%')
+    let self.job_id = job_id
     let b:repl_cmd = self.command
   endif
 endfunction
 
-function! s:repl_switch() dict
+function! s:repl_switch(...) dict
   let repl_window = bufwinnr(self.buffer)
   if repl_window == -1
-    exec s:open_cmd . " +buffer" . a:self.buffer
+    exec s:open_cmd . " +buffer" . self.buffer
   else
     exec repl_window . "wincmd w"
   endif
-  startinsert
 endfunction
 
-function! s:repl_hide() dict
+function! s:repl_hide(...) dict
   let repl_window = bufwinnr(self.buffer)
   if repl_window != -1
     exec repl_window . "close"
   endif
 endfunction
 
-function! s:repl_show() dict
+function! s:repl_show(...) dict
   let repl_window = bufwinnr(self.buffer)
   if repl_window == -1
     exec s:open_cmd . " +buffer" . self.buffer
     wincmd w
   endif
+endfunction
+
+function! s:repl_do(args) dict
+  if empty(a:args)
+    echom "No lines sent to REPL"
+    return ''
+  endif
+
+  let lines = a:args[0]
+
+  let repl_window = bufwinnr(self.buffer)
+  if repl_window == -1
+    call self.switch()
+  endif
+  call jobsend(self.job_id, lines)
+  if repl_window == -1
+    wincmd p
+  endif
+endfunction
+
+function! s:getLines(line1, line2)
+  return add(getline(a:line1, a:line2), "")
 endfunction

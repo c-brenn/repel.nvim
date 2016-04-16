@@ -4,3 +4,11 @@ function! repel#repl#helpers#system_clear()
   endfor
   return ""
 endfunction
+
+function! repel#repl#helpers#path_with_default(args)
+  if empty(a:args) || empty(a:args[0])
+    return expand("%")
+  else
+    return a:args[0]
+  endif
+endfunction

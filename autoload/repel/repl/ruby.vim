@@ -3,6 +3,7 @@ function! repel#repl#ruby#clear(...) dict
   call self.do(["system \"".clear_cmd."\"\n"])
 endfunction
 
-function! repel#repl#ruby#load_file(...) dict
-  call self.do(["require_relative '".expand("%")."'\n"])
+function! repel#repl#ruby#load_file(path,...) dict
+  let relative_path = repel#repl#helpers#path_with_default(a:path)
+  call self.do(["require_relative '".expand(relative_path)."'\n"])
 endfunction

@@ -18,7 +18,7 @@ command! Rhide call s:generic_repl_function('hide')
 command! -nargs=+ Rdo call s:generic_repl_function('do', [<q-args>, ""])
 command! -range Rsend call s:generic_repl_function('do', s:getLines(<line1>, <line2>))
 command! Rclear call s:generic_repl_function('clear')
-command! Rload call s:generic_repl_function('load')
+command! -nargs=? -complete=file Rload call s:generic_repl_function('load', '<args>')
 
 " Shell Commands
 command! -nargs=* -complete=shellcmd Sopen call repel#open_shell(<q-args>)

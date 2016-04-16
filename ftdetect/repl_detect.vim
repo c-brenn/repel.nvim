@@ -3,34 +3,27 @@ aug repel_repl_detect
   " Elixir
   au VimEnter,BufRead,BufNewFile *
         \ if filereadable('config/config.exs') |
-        \   call repel#set_repl('iex -S mix') |
+        \   call repel#set_repl('elixir', 'iex -S mix') |
         \ elseif &filetype == 'elixir' |
-        \   call repel#set_repl('iex') |
+        \   call repel#set_repl('elixir', 'iex') |
         \ endif
 
   " Haskell
   au VimEnter,BufRead,BufNewFile *.hs
         \ if executable('ghci') |
-        \   call repel#set_repl('ghci') |
+        \   call repel#set_repl('haskell', 'ghci') |
         \ endif
 
   " Ruby
   au VimEnter,BufRead,BufNewFile *.rb,*.erb
         \ if executable('irb') |
-        \   call repel#set_repl('irb') |
+        \   call repel#set_repl('ruby', 'irb') |
         \ endif
 
   " Rails
   au VimEnter,BufRead,BufNewFile *
         \ if filereadable('config/application.rb') |
-        \   call repel#set_repl('bundle exec rails console') |
+        \   call repel#set_repl('ruby', 'bundle exec rails console') |
         \ endif
 
-  " Python
-  au VimEnter,BufRead,BufNewFile *.py,
-        \ if executable('ipython') |
-        \   call repel#set_repl('ipython') |
-        \ elseif executable('python') |
-        \   call repel#set_repl('python') |
-        \ end
 aug END

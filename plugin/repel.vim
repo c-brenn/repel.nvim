@@ -28,6 +28,39 @@ command! -nargs=+ -complete=shellcmd Sdo call s:generic_shell_function('do', [<q
 command! -range Ssend call s:generic_shell_function('do', s:getLines(<line1>, <line2>))
 command! Sclear call s:generic_shell_function('clear')
 
+" Test Commands
+command! TestAll call s:test_all()
+command! -nargs=? -complete=file TestFile call s:test_file(<args>)
+
+function! s:test_runner()
+  return repel#repl#{b:repl_type}#test_runner()
+endfunction
+
+function! s:test_all()
+  call s:test_run(s:test_runner())
+endfunction
+
+function! s:test_file(...)
+  let file = expand("%")
+  if a:0 > 0 && !empty(a:1)
+    let file = a:path
+  endif
+  call s:test_run(s:test_runner() . " " . file)
+endfunction
+
+function! s:test_run(cmd)
+  exec s:open_cmd . " new"
+  let window = winnr()
+  call termopen(a:cmd, {'on_exit': function('<sid>test_exit_handler'), 'window': window})
+  wincmd p
+endfunction
+
+function! s:test_exit_handler(job_id, exit_code, event)
+  if a:exit_code == 0
+    exec self.window . "close"
+  endif
+endfunction
+
 " {{{ REPL
 
 function! repel#open_repl(cmd)

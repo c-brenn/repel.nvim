@@ -11,6 +11,11 @@ function! repel#repl#elixir#test_runner(...)
   return 'mix test'
 endfunction
 
-function! repel#repl#elixir#test_file_pattern(file,...)
+function! repel#repl#elixir#in_test_file(file,...)
   return a:file =~# '_test\.exs$'
+endfunction
+
+function! repel#repl#elixir#nearest_cmd()
+  let file_with_line = expand("%").":".line(".")
+  return repel#repl#elixir#test_runner()." ".file_with_line
 endfunction

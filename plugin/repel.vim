@@ -31,6 +31,8 @@ command! Sclear call s:generic_shell_function('clear')
 " Test Commands
 command! TestAll call s:test_all()
 command! -nargs=? -complete=file TestFile call s:test_file(<args>)
+command! TestLast call s:test_last()
+command! TestNearest call s:test_nearest()
 
 function! s:test_runner()
   return repel#repl#{b:repl_type}#test_runner()
@@ -48,11 +50,29 @@ function! s:test_file(...)
   call s:test_run(s:test_runner() . " " . file)
 endfunction
 
+function! s:test_last()
+  if !has_key(g:repel, 'last_test_cmd')
+    echo "You haven't run any tests yet"
+    return
+  endif
+  call s:test_run(g:repel.last_test_cmd)
+endfunction
+
 function! s:test_run(cmd)
+  let g:repel.last_test_cmd = a:cmd
   exec s:open_cmd . " new"
   let window = winnr()
   call termopen(a:cmd, {'on_exit': function('<sid>test_exit_handler'), 'window': window})
   wincmd p
+endfunction
+
+function! s:test_nearest()
+  if repel#repl#{b:repl_type}#in_test_file(expand("%"))
+    let cmd = repel#repl#{b:repl_type}#nearest_cmd()
+    call s:test_run(cmd)
+  else
+    echo "Not in test file"
+  endif
 endfunction
 
 function! s:test_exit_handler(job_id, exit_code, event)

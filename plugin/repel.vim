@@ -59,9 +59,15 @@ function! s:test_last()
 endfunction
 
 function! s:test_run(cmd)
+  if exists('g:repel.test_window_open') && g:repel.test_window_open
+    echom "Closing window"
+    exec g:repel.test_window."close"
+  endif
   let g:repel.last_test_cmd = a:cmd
   exec s:open_cmd . " new"
   let window = winnr()
+  let g:repel.test_window = window
+  let g:repel.test_window_open = 1
   call termopen(a:cmd, {'on_exit': function('<sid>test_exit_handler'), 'window': window})
   wincmd p
 endfunction
@@ -78,6 +84,7 @@ endfunction
 function! s:test_exit_handler(job_id, exit_code, event)
   if a:exit_code == 0
     exec self.window . "close"
+    let g:repel.test_window_open = 0
   endif
 endfunction
 
